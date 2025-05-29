@@ -36,11 +36,18 @@ def translate_english_to_irish(text, tokenizer, model):
 def enforce_vso(text, nlp, is_irish=False):
     doc = nlp(text)
     
+    # For Irish, check if the sentence is already in VSO format
+    if is_irish:
+        # Check if first word is a verb and second word is a pronoun (common VSO pattern in Irish)
+        if len(doc) > 1 and doc[0].pos_ == "VERB" and doc[1].pos_ == "PRON":
+            return text  # Already in VSO, return as-is
+    
     verb = None
     subject = None
     objects = []
     adverbs = []
     prepositions = []
+    temporal_nps = []
     
     # Find main components
     for token in doc:
@@ -54,13 +61,14 @@ def enforce_vso(text, nlp, is_irish=False):
             adverbs.append(token)
         elif token.dep_ == "prep":
             prepositions.append(token)
+        elif token.dep_ == "npadvmod" or (token.dep_ == "advmod" and token.pos_ == "NOUN"):
+            temporal_nps.append(token)
     
     if verb:
-        # Build verb phrase (include auxiliaries, modals, negation)
+        # Build verb phrase
         verb_phrase = []
         for child in verb.children:
             if child.dep_ in ["aux", "auxpass", "neg", "prt"] or child.pos_ in ["AUX", "PART"]:
-                # Put auxiliaries before main verb
                 if child.dep_ in ["aux", "auxpass"]:
                     verb_phrase.insert(0, child.text)
                 else:
@@ -88,16 +96,17 @@ def enforce_vso(text, nlp, is_irish=False):
                     prep_text += " " + " ".join([t.text for t in obj.subtree])
             prep_phrases.append(prep_text)
         
-        # Handle adverbs
+        # Handle adverbs and temporal NPs
         adverb_phrases = [" ".join([t.text for t in adv.subtree]) for adv in adverbs]
+        temporal_phrases = [" ".join([t.text for t in np.subtree]) for np in temporal_nps]
         
-        # Build VSO sentence - different order for English and Irish
+        # Build VSO sentence
         if is_irish:
-            # Irish VSO: Verb + Subject + Object + Adverbials
-            components = [verb_phrase, subject_phrase] + object_phrases + prep_phrases + adverb_phrases
+            # Irish is usually already VSO, so we just ensure proper ordering
+            components = [verb_phrase, subject_phrase] + object_phrases + adverb_phrases + temporal_phrases + prep_phrases
         else:
             # English VSO: Verb + Subject + (Objects/Adverbials)
-            components = [verb_phrase, subject_phrase] + object_phrases + adverb_phrases + prep_phrases
+            components = [verb_phrase, subject_phrase] + object_phrases + adverb_phrases + temporal_phrases + prep_phrases
         
         vso_sentence = " ".join([c for c in components if c]).strip()
         
@@ -127,15 +136,14 @@ def english_to_irish_vso_pipeline(english_text, nlp, tokenizer, model):
     irish_raw = translate_english_to_irish(english_text, tokenizer, model)
     print(f"\nDirect Irish Translation: '{irish_raw}'")
     
-    # Step 4: Enforce VSO order in Irish (if needed)
-    irish_vso = enforce_vso(irish_raw, nlp, is_irish=True)
-    print(f"Irish in VSO order: '{irish_vso}'")
+    # # Step 4: Enforce VSO order in Irish (if needed)
+    # irish_vso = enforce_vso(irish_raw, nlp, is_irish=True)
+    # print(f"Irish in VSO order: '{irish_vso}'")
     
     return {
         'english_svo': english_text,
         'english_vso': english_vso,
-        'irish_svo': irish_raw,
-        'irish_vso': irish_vso
+        'irish_svo': irish_raw
     }
 
 if __name__ == "__main__":
@@ -144,7 +152,7 @@ if __name__ == "__main__":
     test_sentences = [
     "The cat eats fish.",
     "She reads a book.",
-    "I will go to Dublin.",
+    "I will go to Dublin tomorrow.",
     "Do you understand Irish?",
     "The children are playing outside.",
     # New simple test sentences
@@ -167,4 +175,3 @@ if __name__ == "__main__":
         print(f"English SVO: {result['english_svo']}")
         print(f"English VSO: {result['english_vso']}")
         print(f"Irish Direct: {result['irish_svo']}")
-        print(f"Irish VSO:   {result['irish_vso']}")
