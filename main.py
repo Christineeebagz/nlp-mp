@@ -134,16 +134,17 @@ def english_to_irish_vso_pipeline(english_text, nlp, tokenizer, model):
     
     # Step 3: Machine translate to Irish
     irish_raw = translate_english_to_irish(english_text, tokenizer, model)
-    print(f"\nDirect Irish Translation: '{irish_raw}'")
+    print(f"\nIrish Translation: '{irish_raw}'")
     
-    # # Step 4: Enforce VSO order in Irish (if needed)
-    # irish_vso = enforce_vso(irish_raw, nlp, is_irish=True)
+    # # Step 4:Translate from English VSO to Irish (if needed)
+    # irish_vso = translate_english_to_irish(english_vso, tokenizer, model)
     # print(f"Irish in VSO order: '{irish_vso}'")
     
     return {
         'english_svo': english_text,
         'english_vso': english_vso,
-        'irish_svo': irish_raw
+        'irish_svo': irish_raw,
+        # 'irish_vso': irish_vso
     }
 
 if __name__ == "__main__":
@@ -174,4 +175,5 @@ if __name__ == "__main__":
         print(f"\nExample {i+1}:")
         print(f"English SVO: {result['english_svo']}")
         print(f"English VSO: {result['english_vso']}")
-        print(f"Irish Direct: {result['irish_svo']}")
+        print(f"Irish Translation: {result['irish_svo']}")
+        # print(f"Irish VSO: {result['irish_vso']}")
