@@ -203,7 +203,7 @@ def english_to_irish_vso_pipeline(english_text, nlp, tokenizer, model):
     }
 
 def display_conversion_process(process_steps):
-    st.subheader("SV0 to VSO Conversion Process")
+    st.subheader("SVO to VSO Conversion Process")
     with st.expander("Show Detailed Conversion Steps"):
         for step in process_steps:
             if step[0].startswith("\t"):
@@ -212,7 +212,7 @@ def display_conversion_process(process_steps):
                 st.markdown(f"**{step[0]}:** {step[1]}")
 
 def main():
-    st.title("English to Irish VSO Translation Pipeline")
+    st.title("Verbify")
     st.markdown("""
     This tool converts English sentences (typically SVO word order) to Irish (typically VSO word order).
     It shows the detailed linguistic analysis, the conversion process to VSO, and the final Irish translation.
