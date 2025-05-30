@@ -368,13 +368,8 @@ def main():
         st.text(result['analysis'])
         
         st.subheader("Irish Translation")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("**Direct Translation (SVO):**")
-            st.success(result['irish_svo'])
-        with col2:
-            st.markdown("**VSO Adjusted:**")
-            st.success(result['irish_vso'])
+        st.markdown("**Direct Translation (SVO):**")
+        st.success(result['irish_svo'])
         
         st.markdown("---")
         st.markdown("### Translation Process Explanation")
