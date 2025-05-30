@@ -2,6 +2,7 @@ import streamlit as st
 import spacy
 from transformers import MarianMTModel, MarianTokenizer
 import torch
+import pandas as pd
 
 # Initialize models (cached for performance)
 @st.cache_resource
@@ -24,13 +25,15 @@ def initialize_models():
 
 def analyze_sentence(doc):
     analysis = []
-    analysis.append("{:<15} {:<10} {:<10} {:<15}".format("Token", "POS", "Dep", "Head"))
-    analysis.append("-" * 45)
+    # Create a list of dictionaries for each token
     for token in doc:
-        analysis.append("{:<15} {:<10} {:<10} {:<15}".format(
-            token.text, token.pos_, token.dep_, token.head.text
-        ))
-    return "\n".join(analysis)
+        analysis.append({
+            "Token": token.text,
+            "POS": token.pos_,
+            "Dep": token.dep_,
+            "Head": token.head.text
+        })
+    return analysis
 
 def translate_english_to_irish(text, tokenizer, model):
     inputs = tokenizer(text, return_tensors="pt", truncation=True)
@@ -249,7 +252,9 @@ def main():
         display_conversion_process(result['conversion_process'])
         
         st.subheader("Linguistic Analysis")
-        st.text(result['analysis'])
+        # Convert the analysis to a pandas DataFrame for nice table display
+        df = pd.DataFrame(result['analysis'])
+        st.table(df.style.set_properties(**{'text-align': 'left'}))
 
         col1, col2 = st.columns(2)
         with col1:
